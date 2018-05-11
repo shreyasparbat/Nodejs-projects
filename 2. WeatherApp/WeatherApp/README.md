@@ -1,6 +1,6 @@
 # WeatherApp
 
-An application that ...
+An application that tells you the weather of a specified location. 
 
 ## Objectives
 
