@@ -5,7 +5,7 @@ const yargs = require('yargs')
         address: {
             demand: true,
             describe: 'Address to fetch weather for',
-            string: true //tells yargs to always parse the input as a string 
+            string: true //tells yargs to always parse the input as a string
         }
     })
     .help()
@@ -21,19 +21,19 @@ axios.get(geocodeURL).then((response) => {
         throw new Error('Unable to find address');
     }
     console.log(response.data.results[0].formatted_address);
-    
+
     // Calling Dark Sky API
     var location = response.data.results[0].location;
     var weatherURL = `https://api.darksky.net/forecast/9095400969d14e9e1cb627c452404788/${location.lat},${location.lng}`;
     return axios.get(weatherURL);
 
 }).then((response) => {
-    
+    var temperature = response.data.currently.temperature;
+    var apparentTemperature = response.data.currently.apparentTemperature;
+    console.log(`It's currently ${temperature} but feels like ${apparentTemperature}`);
 }).catch((error) => {
     console.log(error.code);
     if (error.code === "ENOTFOUND") {
         console.log('Unable to connect to API servers')
-    } else {
-        console.log(error.message);
     }
 });
