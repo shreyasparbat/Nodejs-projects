@@ -2,6 +2,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
+const _ = require('lodash');
 
 // Custom imports
 const {mongoose} = require('./db/mongoose');
@@ -29,7 +30,7 @@ app.post('/todos', (req, res) => {
     });
 });
 
-//GET: all to-dos
+// GET: all to-dos
 app.get('/todos', (req, res) => {
     Todo.find().then((collection) => {
         res.send({
@@ -41,7 +42,7 @@ app.get('/todos', (req, res) => {
     });
 });
 
-//GET: an individual to-do (custom url)
+// GET: an individual to-do (custom url)
 app.get('/todos/:id', (req, res) => {
    let id = req.params.id;
 
@@ -61,6 +62,82 @@ app.get('/todos/:id', (req, res) => {
             res.status(400).send('No todo found')
         });
     }
+});
+
+// DELETE: given to-do
+app.delete('/todos/:id', (res, req) => {
+     let id = req.params.id;
+
+     // Validate ID
+    if (!ObjectID.isValid(id)) {
+        res.status(404).send({
+            msg: 'Id not find'
+        })
+    } else {
+        // Delete to-do
+        Todo.findByIdAndRemove(id).then((todo) => {
+            res.send({
+                msg: 'Removed successfully',
+                todo
+            }, (err) => {
+                res.status(404).send({err})
+            });
+        });
+    }
+});
+
+// PATCH: update a to-do
+ app.patch('/todos/:id', (req, res) => {
+     // Get user input
+     var id = req.params.id;
+     var body = _.pick(req.body, ['text', 'completed']);
+
+     // Validate ID
+     if (!ObjectID.isValid(id)) {
+         res.status(404).send({
+             msg: 'Id not find'
+         })
+     } else {
+         // Set completedAt value
+         if (_.isBoolean(body.completed) && body.completed) {
+             body.completedAt = new Date().getTime();
+         } else {
+             body.completed = false;
+             body.completedAt = null;
+         }
+
+         // Update to-do in database
+         Todo.findByIdAndUpdate(id, {
+             $set: body
+         }, {
+             new: true
+         }).then((todo) => {
+            if (todo) {
+                res.send({
+                    msg: 'Success',
+                    todo
+                })
+            } else {
+                res.status(404).send()
+            }
+         }).catch((err) => {
+             res.status(404).send()
+         });
+     }
+ });
+
+ // POST: add user
+app.post('/user', (req, res) => {
+    // Get info and save
+    let body = _.pick(req.body, ['email', 'password', 'tokens']);
+    let user = new User({
+        email: body.email,
+        password: body.password,
+        tokens: body.tokens
+    });
+    user.save().then((user) => {
+
+    });
 });
 
 // Start server
