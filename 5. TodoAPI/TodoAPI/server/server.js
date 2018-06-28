@@ -130,13 +130,18 @@ app.delete('/todos/:id', (res, req) => {
 app.post('/user', (req, res) => {
     // Get info and save
     let body = _.pick(req.body, ['email', 'password', 'tokens']);
-    let user = new User({
-        email: body.email,
-        password: body.password,
-        tokens: body.tokens
-    });
-    user.save().then((user) => {
-
+    let user = new User(body);
+    user.save().then(() => {
+        return user.generateAuthToken();
+    }).then((token) => {
+        res.header('x-auth', token).send({
+            user
+        });
+    }).catch((err) => {
+        res.status(400).send({
+            msg: 'error',
+            err
+        });
     });
 });
 
