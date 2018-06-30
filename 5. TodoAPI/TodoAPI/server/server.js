@@ -12,7 +12,7 @@ const {User} = require('./models/user');
 // Init express app
 const app = express();
 
-// Add middleware: body-parser
+// Add middlewares
 app.use(bodyParser.json());
 
 // POST: create new to-do
@@ -125,6 +125,21 @@ app.delete('/todos/:id', (res, req) => {
          });
      }
  });
+
+ // GET: get user profile
+app.get('/user/profile', (req, res) => {
+    const token = req.header('x-auth');
+
+    User.findByToken(token).then((user) => {
+        if (!user) {
+            return Promise.reject('User not found');
+        } else {
+            res.send(user);
+        }
+    }).catch((e) => {
+        res.status(401).send(e);
+    });
+});
 
  // POST: add user
 app.post('/user', (req, res) => {
