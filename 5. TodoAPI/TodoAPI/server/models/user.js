@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
+const _ = require('lodash');
 
 let UserSchema = new mongoose.Schema({
     email: {
@@ -8,7 +9,7 @@ let UserSchema = new mongoose.Schema({
         required: true,
         trim: true,
         minlength: 1,
-        unique: false,
+        unique: true,
         validate: {
             validator: validator.isEmail,
             message: '{VALUE} is not a valid email'
@@ -31,18 +32,27 @@ let UserSchema = new mongoose.Schema({
     }]
 });
 
+// Override toJson
+UserSchema.methods.toJSON = function () {
+    const user = this;
+    const userObject = user.toObject();
+
+    return _.pick(userObject, ['_id', 'email'])
+};
+
+// Generate Authentication tokens
 UserSchema.methods.generateAuthToken = function () {
     // Create token
     const user = this;
-    var access = 'auth'; // to specify the type of token
-    var token = jwt.sign({
-        _id: user._id.toHexString(),
+    const access = 'auth'; // to specify the type of token
+    const token = jwt.sign({
+        _id: user._id,
         access
     }, 'someSecretSalt');
 
     // Save token (using concat instead of push)
     user.tokens = user.tokens.concat([{access, token}]);
-    user.save().then(() => {
+    return user.save().then(() => {
         return token;
     })
 };

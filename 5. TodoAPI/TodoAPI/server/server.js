@@ -89,8 +89,8 @@ app.delete('/todos/:id', (res, req) => {
 // PATCH: update a to-do
  app.patch('/todos/:id', (req, res) => {
      // Get user input
-     var id = req.params.id;
-     var body = _.pick(req.body, ['text', 'completed']);
+     const id = req.params.id;
+     const body = _.pick(req.body, ['text', 'completed']);
 
      // Validate ID
      if (!ObjectID.isValid(id)) {
@@ -121,7 +121,7 @@ app.delete('/todos/:id', (res, req) => {
                 res.status(404).send()
             }
          }).catch((err) => {
-             res.status(404).send()
+             res.status(404).send(err)
          });
      }
  });
@@ -147,5 +147,5 @@ app.post('/user', (req, res) => {
 
 // Start server
 app.listen(3000, () => {
-    console.log('Started on port 3000...')
+    console.log('Listening on port 3000...')
 });
