@@ -3,11 +3,13 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const {ObjectID} = require('mongodb');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 // Custom imports
 const {mongoose} = require('./db/mongoose');
 const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
+const {authenticate} = require('./middleware/authenticate');
 
 // Init express app
 const app = express();
@@ -59,7 +61,7 @@ app.get('/todos/:id', (req, res) => {
                 res.status(404).send()
             }
         }, (e) => {
-            res.status(400).send('No todo found')
+            res.status(400).send('No todo found', e)
         });
     }
 });
@@ -127,18 +129,8 @@ app.delete('/todos/:id', (res, req) => {
  });
 
  // GET: get user profile
-app.get('/user/profile', (req, res) => {
-    const token = req.header('x-auth');
-
-    User.findByToken(token).then((user) => {
-        if (!user) {
-            return Promise.reject('User not found');
-        } else {
-            res.send(user);
-        }
-    }).catch((e) => {
-        res.status(401).send(e);
-    });
+app.get('/user/profile', authenticate, (req, res) => {
+    res.send(req.user);
 });
 
  // POST: add user
@@ -153,10 +145,42 @@ app.post('/user', (req, res) => {
             user
         });
     }).catch((err) => {
-        res.status(400).send({
+        res.status(500).send({
             msg: 'error',
             err
         });
+    });
+});
+
+// POST: User login
+app.post('/user/login', (req, res) => {
+    let body = _.pick(req.body, ['email', 'password']);
+
+    // Get user with that email
+    User.find({
+        email: body.email
+    }).then((user) => {
+        // Check if user exists
+        if (!user) {
+            // Bad request
+            res.status(400).send('User does not exists');
+        } else {
+            // Check if password is correct
+            bcrypt.compare(user.password, body.password, (err, result) => {
+                // Send back token
+                console.log(result)
+                if (result) {
+                    res.send({
+                        token: user.token
+                    });
+                } else {
+                    res.status(400).send('Incorrect password')
+                }
+            });
+        }
+    }).catch((e) => {
+        // Internal error
+        res.status(500).send(e);
     });
 });
 
