@@ -156,32 +156,14 @@ app.post('/user', (req, res) => {
 app.post('/user/login', (req, res) => {
     let body = _.pick(req.body, ['email', 'password']);
 
-    // Get user with that email
-    User.find({
-        email: body.email
-    }).then((user) => {
-        // Check if user exists
-        if (!user) {
-            // Bad request
-            res.status(400).send('User does not exists');
-        } else {
-            // Check if password is correct
-            bcrypt.compare(user.password, body.password, (err, result) => {
-                // Send back token
-                console.log(result)
-                if (result) {
-                    res.send({
-                        token: user.token
-                    });
-                } else {
-                    res.status(400).send('Incorrect password')
-                }
-            });
-        }
+    // Find that user
+    User.findByCredentials(body.email, body.password).then((user) => {
+
     }).catch((e) => {
-        // Internal error
-        res.status(500).send(e);
+
     });
+
+
 });
 
 // Start server
