@@ -133,7 +133,7 @@ app.get('/user/profile', authenticate, (req, res) => {
     res.send(req.user);
 });
 
- // POST: add user
+// POST: add user
 app.post('/user', (req, res) => {
     // Get info and save
     let body = _.pick(req.body, ['email', 'password', 'tokens']);
@@ -158,12 +158,10 @@ app.post('/user/login', (req, res) => {
 
     // Find that user
     User.findByCredentials(body.email, body.password).then((user) => {
-
+        res.send(user);
     }).catch((e) => {
-
+        res.status(400).send(e);
     });
-
-
 });
 
 // Start server
